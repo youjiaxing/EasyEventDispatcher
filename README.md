@@ -30,7 +30,8 @@ interface EventDispatcherInterface
 }
 ```
 
-# 简单示例
+# 示例
+## 简单示例1
 ```php
 require "vendor/autoload.php";
 
@@ -49,4 +50,29 @@ var_dump($dispatcher->dispatch("test", "hello", true));
 
 // 返回数组 ['event "test" with msg "hello" handled.', 'listener2']
 var_dump($dispatcher->dispatch("test", "hello"));
+```
+
+## 简单示例2
+```php
+require "vendor/autoload.php";
+
+class TestObj
+{
+    public function test($arr)
+    {
+        return implode(', ', $arr);
+    }
+
+    public static function staticTest($arr)
+    {
+        return implode(', ', $arr);
+    }
+}
+
+$dispatcher = new \EasyEvent\EventDispatcher();
+$dispatcher->listen("event", [new TestObj(), "test"]);
+$dispatcher->listen("event", "TestObj@test");
+$dispatcher->listen("event", ["TestObj", "test"]);
+
+var_dump($dispatcher->dispatch("event", [['a', 'b', 'c']]));
 ```
