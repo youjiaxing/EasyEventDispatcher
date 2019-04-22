@@ -22,10 +22,11 @@ interface EventDispatcherInterface
     /**
      * @param EventInterface|string $event
      * @param array                 $payload
+     * @param bool                  $halt
      *
      * @return mixed
      */
-    public function dispatch($event, $payload = []);
+    public function dispatch($event, $payload = [], $halt = false);
 }
 ```
 
