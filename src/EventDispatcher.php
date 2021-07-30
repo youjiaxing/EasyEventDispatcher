@@ -40,7 +40,7 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return \Closure
      */
-    public function makeListener($listener)
+    protected function makeListener($listener)
     {
         return function ($event, $payload) use ($listener) {
             if ($listener instanceof ListenerInterface) {
