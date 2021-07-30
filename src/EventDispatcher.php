@@ -79,8 +79,10 @@ class EventDispatcher implements EventDispatcherInterface
     protected function createClassCallable($listener)
     {
         list($listener, $method) = $this->resolveStrListener($listener);
-
-        return [new $listener(), $method];
+        if(class_exists($listener)){
+            return [new $listener(), $method];
+        }
+        throw new \Exception("A class named {$listener} is not loaded");
     }
 
     /**
