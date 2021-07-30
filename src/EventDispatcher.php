@@ -27,9 +27,15 @@ class EventDispatcher implements EventDispatcherInterface
      */
     public static function listen($events, $listener)
     {
+        $events_unique=[];
         $listener = (new self)->makeListener($listener);
         foreach ((array)$events as $event) {
-            self::$listeners[$event][] = $listener;
+
+            if(!in_array($event,$events_unique)){
+                self::$listeners[$event][] = $listener;
+                $events_unique[]=$event;
+            }
+
         }
     }
 
