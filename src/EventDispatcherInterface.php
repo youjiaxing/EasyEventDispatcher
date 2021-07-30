@@ -15,7 +15,7 @@ interface EventDispatcherInterface
      *
      * @return mixed
      */
-    public function listen($event, $listener);
+    public static function listen($event, $listener);
 
     /**
      * @param EventInterface|string $event
@@ -24,5 +24,5 @@ interface EventDispatcherInterface
      *
      * @return mixed
      */
-    public function dispatch($event, $payload = [], $halt = false);
+    public static function dispatch($event, $payload = [], $halt = false);
 }
