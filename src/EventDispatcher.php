@@ -92,7 +92,11 @@ class EventDispatcher implements EventDispatcherInterface
      */
     protected function resolveStrListener($listener)
     {
-        return strpos($listener, '@') === false ? [$listener, $this->getHandleMethodName()] : explode('@', $listener, 2);
+        if(strpos($listener, '@') === false){
+            throw new \Exception("This class must implements the EventDispatcherInterface interface or send a method name parameter to the EventDispatcher::listen static method according to the documentation");
+        }else{
+            return explode('@', $listener, 2);
+        }
     }
 
 
