@@ -28,7 +28,7 @@ class EventDispatcher implements EventDispatcherInterface
     public static function listen($events, $listener)
     {
         $events_unique=[];
-        $listener = (new self)->makeListener($listener);
+        $listener = self::makeListener($listener);
         foreach ((array)$events as $event) {
 
             if(!in_array($event,$events_unique)){
@@ -46,17 +46,17 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return \Closure
      */
-    protected function makeListener($listener)
+    protected static function makeListener($listener)
     {
         return function ($event, $payload) use ($listener) {
             if ($listener instanceof ListenerInterface) {
-                $listener = [$listener, $this->getHandleMethodName()];
+                $listener = [$listener, self::getHandleMethodName()];
             } elseif ($listener instanceof \Closure) {
                 // blank
             } elseif (is_callable($listener)) {
                 // blank
             } elseif (is_string($listener)) {
-                $listener = $this->createClassCallable($listener);
+                $listener = self::createClassCallable($listener);
             }
 
             $payload[] = $event;
@@ -70,7 +70,7 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return string
      */
-    protected function getHandleMethodName()
+    protected static function getHandleMethodName()
     {
         return $this->handleMethodName;
     }
@@ -82,9 +82,9 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return array
      */
-    protected function createClassCallable($listener)
+    protected static function createClassCallable($listener)
     {
-        list($listener, $method) = $this->resolveStrListener($listener);
+        list($listener, $method) = self::resolveStrListener($listener);
         if(class_exists($listener)){
             return [new $listener(), $method];
         }
@@ -98,7 +98,7 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return array
      */
-    protected function resolveStrListener($listener)
+    protected static function resolveStrListener($listener)
     {
         if(strpos($listener, '@') === false){
             throw new \Exception("This class must implements the EventDispatcherInterface interface or send a method name parameter to the EventDispatcher::listen static method according to the documentation");
@@ -119,7 +119,7 @@ class EventDispatcher implements EventDispatcherInterface
      */
     public static function dispatch($event, $payload = [], $halt = false)
     {
-        list($event, $payload) = (new self)->resolveEventAndPayload($event, $payload);
+        list($event, $payload) = self::resolveEventAndPayload($event, $payload);
 
         $responses = [];
             
@@ -144,7 +144,7 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return array
      */
-    protected function resolveEventAndPayload($event, $payload)
+    protected static function resolveEventAndPayload($event, $payload)
     {
         $payload = is_array($payload) ? $payload : [$payload];
         if (is_object($event)) {
