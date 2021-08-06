@@ -1,13 +1,6 @@
-# 简介
-这是一个php的简单事件分发器, 其中 Listener 支持如下类型:
-- \Closure
-- callable
-	> `is_callable()` 返回true
-- Class implements ListenerInterface
-- string(类名)
-- string(类型@方法)
 
-# EventDispatcher 接口
+
+# EventDispatcher 
 ```php
 interface EventDispatcherInterface
 {
@@ -17,44 +10,50 @@ interface EventDispatcherInterface
      *
      * @return mixed
      */
-    public function listen($event, $listener);
+    public static function listen($event, $listener);
 
     /**
      * @param EventInterface|string $event
      * @param array                 $payload
+     * @param string                $return_type
      * @param bool                  $halt
      *
      * @return mixed
      */
-    public function dispatch($event, $payload = [], $halt = false);
+    public static function dispatch($event, $payload = [], $return_type='array', $halt = false);
 }
 ```
 
-# 示例
-## 简单示例1
+## EXAMPLE 1
 ```php
 require "vendor/autoload.php";
+use EasyEvent\EventDispatcher
 
-$dispatcher = new \EasyEvent\EventDispatcher();
-
-$dispatcher->listen("test", function ($msg, $event) {
+EventDispatcher::listen("test", function ($msg, $event) {
     return "event \"$event\" with msg \"$msg\" handled.";
 });
 
-$dispatcher->listen("test", function ($msg, $event) {
+EventDispatcher::listen("test", function ($msg, $event) {
     return "listener2";
 });
 
-// 返回字符串 'event "test" with msg "hello" handled.'
-var_dump($dispatcher->dispatch("test", "hello", true));
+// return(Array) ['event "test" with msg "hello" handled.']
+var_dump(EventDispatcher::dispatch("test", "hello",'array', true));
 
-// 返回数组 ['event "test" with msg "hello" handled.', 'listener2']
-var_dump($dispatcher->dispatch("test", "hello"));
+// return(String) 'event "test" with msg "hello" handled.'
+var_dump(EventDispatcher::dispatch("test", "hello",'string', true));
+
+// return(String) ['event "test" with msg "hello" handled.', 'listener2']
+var_dump(EventDispatcher::dispatch("test", "hello",'string'));
+
+// return(Array) [['event "test" with msg "hello" handled.', 'listener2']]
+var_dump(EventDispatcher::dispatch("test", "hello",'array'));
 ```
 
-## 简单示例2
+## EXAMPLE 2
 ```php
 require "vendor/autoload.php";
+use EasyEvent\EventDispatcher
 
 class TestObj
 {
@@ -69,10 +68,9 @@ class TestObj
     }
 }
 
-$dispatcher = new \EasyEvent\EventDispatcher();
-$dispatcher->listen("event", [new TestObj(), "test"]);
-$dispatcher->listen("event", "TestObj@test");
-$dispatcher->listen("event", ["TestObj", "test"]);
+EventDispatcher::listen("event", [new TestObj(), "test"]);
+EventDispatcher::listen("event", "TestObj@test");
+EventDispatcher::listen("event", ["TestObj", "staticTest"]);
 
-var_dump($dispatcher->dispatch("event", [['a', 'b', 'c']]));
+var_dump(EventDispatcher::dispatch("event", [['a', 'b', 'c']]));
 ```

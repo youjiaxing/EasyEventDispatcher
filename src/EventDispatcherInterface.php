@@ -1,6 +1,6 @@
 <?php
 
-namespace EasyEvent;
+namespace SAhnj\EventDispatcher;
 
 /**
  *
@@ -15,14 +15,15 @@ interface EventDispatcherInterface
      *
      * @return mixed
      */
-    public function listen($event, $listener);
+    public static function listen($event, $listener);
 
     /**
      * @param EventInterface|string $event
      * @param array                 $payload
+     * @param string                $return_type
      * @param bool                  $halt
      *
      * @return mixed
      */
-    public function dispatch($event, $payload = [], $halt = false);
+    public static function dispatch($event, $payload = [], $return_type='array', $halt = false);
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace EasyEvent;
+namespace SAhnj\EventDispatcher;
 
 /**
  *
@@ -13,9 +13,9 @@ class EventDispatcher implements EventDispatcherInterface
      * 已注册的事件监听器
      * @var array
      */
-    protected $listener = [];
+    protected static $listeners = [];
 
-    protected $handleMethodName = "handle";
+    protected static $handleMethodName = "handle";
 
     /**
      * 新增监听事件及监听者
@@ -25,11 +25,17 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return void
      */
-    public function listen($events, $listener)
+    public static function listen($events, $listener)
     {
-        $listener = $this->makeListener($listener);
+        $events_unique=[];
+        $listener = self::makeListener($listener);
         foreach ((array)$events as $event) {
-            $this->listener[$event][] = $listener;
+
+            if(!in_array($event,$events_unique)){
+                self::$listeners[$event][] = $listener;
+                $events_unique[]=$event;
+            }
+
         }
     }
 
@@ -40,22 +46,22 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return \Closure
      */
-    public function makeListener($listener)
+    protected static function makeListener($listener)
     {
         return function ($event, $payload) use ($listener) {
             if ($listener instanceof ListenerInterface) {
-                $listener = [$listener, $this->getHandleMethodName()];
+                $listener = [$listener, self::getHandleMethodName()];
             } elseif ($listener instanceof \Closure) {
                 // blank
             } elseif (is_callable($listener)) {
                 // blank
             } elseif (is_string($listener)) {
-                $listener = $this->createClassCallable($listener);
+                $listener = self::createClassCallable($listener);
             }
 
-            $payload[] = $event;
+            // $payload[] = $event;
 
-            return call_user_func_array($listener, $payload);
+            return call_user_func($listener, $payload,$event);
         };
     }
 
@@ -64,7 +70,7 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return string
      */
-    protected function getHandleMethodName()
+    protected static function getHandleMethodName()
     {
         return $this->handleMethodName;
     }
@@ -76,11 +82,13 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return array
      */
-    protected function createClassCallable($listener)
+    protected static function createClassCallable($listener)
     {
-        list($listener, $method) = $this->resolveStrListener($listener);
-
-        return [new $listener(), $method];
+        list($listener, $method) = self::resolveStrListener($listener);
+        if(class_exists($listener)){
+            return [new $listener(), $method];
+        }
+        throw new \Exception("A class named {$listener} is not loaded");
     }
 
     /**
@@ -90,9 +98,13 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return array
      */
-    protected function resolveStrListener($listener)
+    protected static function resolveStrListener($listener)
     {
-        return strpos($listener, '@') === false ? [$listener, $this->getHandleMethodName()] : explode('@', $listener, 2);
+        if(strpos($listener, '@') === false){
+            throw new \Exception("This class must implements the EventDispatcherInterface interface or send a method name parameter to the EventDispatcher::listen static method according to the documentation");
+        }else{
+            return explode('@', $listener, 2);
+        }
     }
 
 
@@ -105,21 +117,63 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return mixed
      */
-    public function dispatch($event, $payload = [], $halt = false)
+    public static function dispatch($event, $payload = [], $return_type='array', $halt = false)
     {
-        list($event, $payload) = $this->resolveEventAndPayload($event, $payload);
+        // list($event, $payload) = self::resolveEventAndPayload($event, $payload);
 
         $responses = [];
-        foreach ($this->getListeners($event) as $listener) {
-            $resp = call_user_func($listener, $event, $payload);
-            if ($halt && !is_null($resp)) {
-                return $resp;
+            
+            foreach (self::getListeners($event) as $listener) {
+                $resp = call_user_func($listener, $event, $payload);
+                if ($halt && !is_null($resp)) {
+                    return self::format_return([$resp], $return_type);
+                }
+                $responses[] = $resp;
             }
-            $responses[] = $resp;
-        }
+        
 
-        return $halt ? null : $responses;
+
+        return $halt ? null : self::format_return($responses, $return_type);
     }
+
+    	/**
+	 * Format Return
+	 *
+	 * Formats the return in the given type
+	 *
+	 * @param array $calls The array of returns
+	 * @param string $return_type The return type
+	 * @return array|null The formatted return
+	 */
+	protected static function format_return(array $calls, $return_type)
+	{
+
+		switch ($return_type)
+		{
+			case 'array':
+				return $calls;
+				break;
+			case 'json':
+				return json_encode($calls);
+				break;
+			case 'serialize':
+				return serialize($calls);
+				break;
+			case 'string':
+				$str = '';
+				foreach ($calls as $call)
+				{
+					$str .= $call;
+				}
+				return $str;
+				break;
+			default:
+				return $calls;
+				break;
+		}
+
+		return null;
+	}
 
     /**
      * 解析所给的 event 和 payload, 为监听器调用作准备
@@ -129,7 +183,7 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return array
      */
-    protected function resolveEventAndPayload($event, $payload)
+    protected static function resolveEventAndPayload($event, $payload)
     {
         $payload = is_array($payload) ? $payload : [$payload];
         if (is_object($event)) {
@@ -140,6 +194,28 @@ class EventDispatcher implements EventDispatcherInterface
         return [$event, $payload];
     }
 
+
+    	/**
+	 *
+	 * @access	public
+	 * @param	string	
+	 * @return	bool	
+	 */
+
+	/**
+	 * Checks if the event has listeners
+	 *
+	 * @param string $event The name of the event
+	 * @return boolean Whether the event has listeners
+	 */
+	public static function has_listeners($event)
+	{
+
+        return (isset(self::$listeners[$event]) and count(self::$listeners[$event]) > 0);
+	}
+
+    
+
     /**
      * 获取所有给定事件对应的listener
      *
@@ -147,10 +223,18 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return mixed
      */
-    public function getListeners($event)
+    public static function getListeners($event)
     {
-        //TODO 可扩展: 若$event含有通配符, 则获取所有匹配的listeners
 
-        return $this->listener[$event] ?? [];
+        return (!empty($event) && self::has_listeners($event)) ? self::$listeners[$event] : [];
+
     }
+
+    public static function getAllListeners()
+    {
+
+        return self::$listeners;
+
+    }
+
 }

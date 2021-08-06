@@ -1,18 +1,22 @@
 {
-    "name": "简单的事件分发器 Event Dispatcher",
+    "name": "sahnj/event-dispatcher",
     "type": "library",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Sadeq Ahanj",
+            "homepage": "https://github.com/SAhnj"
+        }
+    ],
     "require-dev": {
-        "phpunit/phpunit": "^7.5"
+      
     },
     "autoload": {
         "psr-4": {
-            "EasyEvent\\": "src/"
+            "SAhnj\\EventDispatcher\\": "src/"
         }
     },
     "autoload-dev": {
-        "psr-4": {
-            "Test\\": "tests/"
-        }
+        
     }
 }
