@@ -2,6 +2,12 @@
     "name": "SAhnj/EasyEventDispatcher",
     "type": "library",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Sadeq Ahanj",
+            "homepage": "https://github.com/SAhnj"
+        }
+    ],
     "require-dev": {
       
     },
