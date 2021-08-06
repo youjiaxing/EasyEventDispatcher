@@ -1,6 +1,6 @@
 <?php
 
-namespace EasyEvent;
+namespace SAhnj\EventDispatcher;
 
 /**
  * 监听器接口
