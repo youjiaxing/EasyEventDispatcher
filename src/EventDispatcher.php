@@ -15,7 +15,7 @@ class EventDispatcher implements EventDispatcherInterface
      */
     protected static $listeners = [];
 
-    protected $handleMethodName = "handle";
+    protected static $handleMethodName = "handle";
 
     /**
      * 新增监听事件及监听者
