@@ -20,9 +20,10 @@ interface EventDispatcherInterface
     /**
      * @param EventInterface|string $event
      * @param array                 $payload
+     * @param string                $return_type
      * @param bool                  $halt
      *
      * @return mixed
      */
-    public static function dispatch($event, $payload = [], $halt = false);
+    public static function dispatch($event, $payload = [], $return_type='array', $halt = false);
 }

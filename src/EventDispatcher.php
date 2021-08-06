@@ -59,9 +59,9 @@ class EventDispatcher implements EventDispatcherInterface
                 $listener = self::createClassCallable($listener);
             }
 
-            $payload[] = $event;
+            // $payload[] = $event;
 
-            return call_user_func_array($listener, $payload);
+            return call_user_func($listener, $payload,$event);
         };
     }
 
@@ -117,24 +117,63 @@ class EventDispatcher implements EventDispatcherInterface
      *
      * @return mixed
      */
-    public static function dispatch($event, $payload = [], $halt = false)
+    public static function dispatch($event, $payload = [], $return_type='array', $halt = false)
     {
-        list($event, $payload) = self::resolveEventAndPayload($event, $payload);
+        // list($event, $payload) = self::resolveEventAndPayload($event, $payload);
 
         $responses = [];
             
             foreach (self::getListeners($event) as $listener) {
                 $resp = call_user_func($listener, $event, $payload);
                 if ($halt && !is_null($resp)) {
-                    return $resp;
+                    return self::format_return([$resp], $return_type);
                 }
                 $responses[] = $resp;
             }
         
 
 
-        return $halt ? null : $responses;
+        return $halt ? null : self::format_return($responses, $return_type);
     }
+
+    	/**
+	 * Format Return
+	 *
+	 * Formats the return in the given type
+	 *
+	 * @param array $calls The array of returns
+	 * @param string $return_type The return type
+	 * @return array|null The formatted return
+	 */
+	protected static function format_return(array $calls, $return_type)
+	{
+
+		switch ($return_type)
+		{
+			case 'array':
+				return $calls;
+				break;
+			case 'json':
+				return json_encode($calls);
+				break;
+			case 'serialize':
+				return serialize($calls);
+				break;
+			case 'string':
+				$str = '';
+				foreach ($calls as $call)
+				{
+					$str .= $call;
+				}
+				return $str;
+				break;
+			default:
+				return $calls;
+				break;
+		}
+
+		return null;
+	}
 
     /**
      * 解析所给的 event 和 payload, 为监听器调用作准备
